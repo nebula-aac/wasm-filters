@@ -31,8 +31,8 @@ static CORS_HEADERS: [(&str, &str); 5] = [
 // This struct is what the JWT token sent by the user will deserialize to
 #[derive(Deserialize, Debug)]
 struct Jwt {
-    headers: HashMap<String,String>,
-    payload: HashMap<String,String>,
+    headers: HashMap<String, String>,
+    payload: HashMap<String, String>,
 }
 
 impl Jwt {
@@ -71,32 +71,31 @@ impl Jwt {
 
     // Wrapper function to run operations
     fn modify_jwt(&mut self, config: &ConfigJwt) {
-        for (i,j ) in config.add_header.iter() {
-            self.add_header(&i,&j);
+        for (i, j) in config.add_header.iter() {
+            self.add_header(&i, &j);
         }
 
         for i in config.del_header.iter() {
             self.del_header(&i);
         }
 
-        for (i,j ) in config.add_payload.iter() {
-            self.add_payload(&i,&j);
+        for (i, j) in config.add_payload.iter() {
+            self.add_payload(&i, &j);
         }
 
         for i in config.del_payload.iter() {
             self.del_payload(&i);
         }
-        proxy_wasm::hostcalls::log(LogLevel::Critical, format!("jwt: {:#?}",self).as_str())
-                .ok();
+        proxy_wasm::hostcalls::log(LogLevel::Critical, format!("jwt: {:#?}", self).as_str()).ok();
 
         for i in config.payload_to_header.iter() {
-            proxy_wasm::hostcalls::log(LogLevel::Critical, format!("p2h: {}",i).as_str()).ok();
-            let (key,value) = (i.clone(),self.payload.get(i).unwrap().clone());
-            self.payload_to_header(&key,&value);
+            proxy_wasm::hostcalls::log(LogLevel::Critical, format!("p2h: {}", i).as_str()).ok();
+            let (key, value) = (i.clone(), self.payload.get(i).unwrap().clone());
+            self.payload_to_header(&key, &value);
         }
-        
+
         for i in config.header_to_payload.iter() {
-            let (key,value) = (i.clone(),self.headers.get(i).unwrap().clone());
+            let (key, value) = (i.clone(), self.headers.get(i).unwrap().clone());
             self.header_to_payload(&key.clone(), &value.clone());
         }
     }
@@ -122,7 +121,7 @@ impl UpstreamCall {
 impl Context for UpstreamCall {}
 
 impl HttpContext for UpstreamCall {
-    fn on_http_request_headers(&mut self, _num_headers: usize) -> Action {
+    fn on_http_request_headers(&mut self, _num_headers: usize, _: bool) -> Action {
         if let Some(method) = self.get_http_request_header(":method") {
             if method == "OPTIONS" {
                 self.send_http_response(204, CORS_HEADERS.to_vec(), None);
@@ -130,23 +129,22 @@ impl HttpContext for UpstreamCall {
             }
         }
 
-        
         if let Some(jwt) = self.get_http_request_header("Authorization") {
             // Decoding JWT token
-            let mut split_jwt: Vec<String> = jwt.splitn(3,".").map(|s| s.to_string()).collect();
+            let mut split_jwt: Vec<String> = jwt.splitn(3, ".").map(|s| s.to_string()).collect();
             let (h, p) = (split_jwt[0].as_str(), split_jwt[1].as_str());
             let mut jwt = Jwt::new();
-            
+
             //proxy_wasm::hostcalls::log(LogLevel::Critical, format!("h: {},p:{}",h,p).as_str())
             //    .ok();
-            
+
             //TODO: handle different types passed to json(modify config?)
-            let b64_headers=base64::decode(h).unwrap();
-            let b64_payload=base64::decode(p).unwrap();
-            
+            let b64_headers = base64::decode(h).unwrap();
+            let b64_payload = base64::decode(p).unwrap();
+
             //proxy_wasm::hostcalls::log(LogLevel::Critical, format!("h64: {:?},p64:{:?}",b64_headers,b64_payload).as_str())
             //    .ok();
-            
+
             jwt.headers = serde_json::from_slice(&b64_headers).unwrap();
             jwt.payload = serde_json::from_slice(&b64_payload).unwrap();
 
@@ -163,10 +161,10 @@ impl HttpContext for UpstreamCall {
             b64_payload.pop();
             b64_payload.pop();
 
-            split_jwt[0] = b64_header; 
+            split_jwt[0] = b64_header;
             split_jwt[1] = b64_payload;
-            let new_jwt = split_jwt.join(".");            
-            
+            let new_jwt = split_jwt.join(".");
+
             self.set_http_request_header("Authorization", Some(new_jwt.as_str()));
 
             // Initialising headers to send back
@@ -184,8 +182,8 @@ impl HttpContext for UpstreamCall {
             */
 
             proxy_wasm::hostcalls::log(LogLevel::Debug, format!("jwt: {:?}", new_jwt).as_str())
-                 .ok();
-            
+                .ok();
+
             headers.append(&mut vec![("jwt_test", new_jwt.as_str())]);
             self.send_http_response(200, headers, Some(b"OK\n"));
             return Action::Pause;
@@ -194,8 +192,8 @@ impl HttpContext for UpstreamCall {
         self.send_http_response(401, CORS_HEADERS.to_vec(), Some(b"Unauthorized\n"));
         Action::Continue
     }
-    
-    fn on_http_response_headers(&mut self, _num_headers: usize) -> Action {
+
+    fn on_http_response_headers(&mut self, _num_headers: usize, _: bool) -> Action {
         self.set_http_response_header("x-app-serving", Some("rate-limit-filter"));
         proxy_wasm::hostcalls::log(LogLevel::Debug, format!("RESPONDING").as_str()).ok();
         Action::Continue
@@ -219,9 +217,12 @@ impl<'a> RootContext for UpstreamCallRoot {
             // bytestring of decoded JSON -> String of decoded JSON
             let json_str = String::from_utf8(config_b64).unwrap();
             // Creating HashMap of pattern ("path name", "rule type") and saving into UpstreamCallRoot object
-            self.config_jwt=serde_json::from_str(&json_str).unwrap();
-            proxy_wasm::hostcalls::log(LogLevel::Critical, format!("config: {:#?}", self.config_jwt).as_str())
-                 .ok();
+            self.config_jwt = serde_json::from_str(&json_str).unwrap();
+            proxy_wasm::hostcalls::log(
+                LogLevel::Critical,
+                format!("config: {:#?}", self.config_jwt).as_str(),
+            )
+            .ok();
         }
         true
     }
@@ -233,5 +234,10 @@ impl<'a> RootContext for UpstreamCallRoot {
 
     fn get_type(&self) -> Option<ContextType> {
         Some(ContextType::HttpContext)
+    }
+}
+impl UpstreamCallRoot {
+    fn get_configuration(&self) -> Option<Vec<u8>> {
+        todo!()
     }
 }

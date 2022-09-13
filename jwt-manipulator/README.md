@@ -1,4 +1,4 @@
-# JWTManipulator9000
+# JWT Manipulator
 A WASM filter made to manipulate JWT token headers and payloads (currently only supports string parameters). Works best with the Meshery Project :)
 
 DISCLAIMER: This filter doesn't regenerate the signature of the modified JWT, and provides no protections. Proceed with caution!
