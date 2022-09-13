@@ -22,7 +22,7 @@ impl UpstreamCall {
 }
 
 impl HttpContext for UpstreamCall {
-    fn on_http_request_headers(&mut self, _num_headers: usize) -> Action {
+    fn on_http_request_headers(&mut self, _num_headers: usize, _: bool) -> Action {
         let token = self.get_http_request_header("token").unwrap_or(String::from(""));
         proxy_wasm::hostcalls::log(LogLevel::Info, format!("Auth header : {:?}", token).as_str());
         let x = self.dispatch_http_call(
@@ -41,7 +41,7 @@ impl HttpContext for UpstreamCall {
         Action::Continue
     }
 
-    fn on_http_response_headers(&mut self, _num_headers: usize) -> Action {
+    fn on_http_response_headers(&mut self, _num_headers: usize, _: bool) -> Action {
         Action::Continue
     }
 }

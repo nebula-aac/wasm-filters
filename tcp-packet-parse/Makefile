@@ -16,11 +16,11 @@ build-unoptimized: clean
 # https://rustwasm.github.io/docs/wasm-pack/commands/build.html
 
 deploy:
-	WASM_PATH=$(WASM_PATH) docker-compose up --build --remove-orphans
+	WASM_PATH=$(WASM_PATH) docker-compose up --build --remove-orphans || WASM_PATH=$(WASM_PATH) docker compose up --build --remove-orphans
 
 # shows only the logs related to WASM filter/singleton 
 deploy-filtered:
-	WASM_PATH=$(WASM_PATH) docker-compose up --build --remove-orphans | grep "\[wasm\]\|Starting"
+	WASM_PATH=$(WASM_PATH) docker-compose up --build --remove-orphans | grep "\[wasm\]\|Starting" || WASM_PATH=$(WASM_PATH) docker compose up --build --remove-orphans | grep "\[wasm\]\|Starting"
 
 run: build deploy
 

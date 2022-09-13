@@ -1,6 +1,6 @@
 # check wether compiled with wasm-pack
 ifeq ($(shell test -e ./metrics-collector/pkg/metrics_collector_bg.wasm && echo -n y),y)
-	METRICS_COLLECTOR_WASM=./metrics_collector/pkg/metrics_collector_bg.wasm
+	METRICS_COLLECTOR_WASM=./metrics-collector/pkg/metrics_collector_bg.wasm
 endif
 ifeq ($(shell test -e ./singleton-queue/pkg/singleton_queue_bg.wasm && echo -n y),y)
 	SINGLETON_QUEUE_WASM=./singleton-queue/pkg/singleton_queue_bg.wasm
@@ -20,13 +20,13 @@ build-unoptimized: clean
 deploy:
 	METRICS_COLLECTOR_WASM=$(METRICS_COLLECTOR_WASM) \
 	SINGLETON_QUEUE_WASM=$(SINGLETON_QUEUE_WASM) \
-	docker-compose up --build --remove-orphans;
+	docker compose up --build --remove-orphans;
 
 # shows only the logs related to WASM filter/singleton
 deploy-filtered:
 	METRICS_COLLECTOR_WASM=$(METRICS_COLLECTOR_WASM) \
 	SINGLETON_QUEUE_WASM=$(SINGLETON_QUEUE_WASM) \
-	docker-compose up --build --remove-orphans | grep "\[wasm\]\|Starting";
+	docker compose up --build --remove-orphans | grep "\[wasm\]\|Starting";
 
 run: build deploy
 
