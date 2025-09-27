@@ -18,7 +18,7 @@ A collection of WebAssemby filters for Envoy proxy written in C,C++,C# and Rust 
 
 See the [Image Hub](https://layer5.io/projects/image-hub) as a related project (a sample application). Also, see Meshery's filter management capabitilies.
 
-### Weekly Meeting Details
+### Community Meeting Details
 
 See all community meeting details --> https://meet.layer5.io
 
